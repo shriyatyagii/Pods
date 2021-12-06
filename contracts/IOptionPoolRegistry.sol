@@ -1,0 +1,10 @@
+// SPDX-License-Identifier: agpl-3.0
+pragma solidity ^0.8.0;
+
+interface IOptionPoolRegistry {
+    event PoolSet(address indexed factory, address indexed option, address pool);
+
+    function getPool(address option) external view returns (address);
+
+    function setPool(address option, address pool) external;
+}
