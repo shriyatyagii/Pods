@@ -1,5 +1,4 @@
 ```bash
-cd compound-supply-examples/
 
 ## Set environment variables for the script to use
 export MAINNET_PROVIDER_URL="https://mainnet.infura.io/v3/[INFURA-API-KEY]"
