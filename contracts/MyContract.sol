@@ -50,7 +50,7 @@ contract MyContract {
         emit MyLog("Maximum underlying Borrow (borrow far less!)", maxBorrowUnderlying);
 
         // Borrow underlying
-        uint256 numUnderlyingToBorrow = 10;
+        uint256 numUnderlyingToBorrow = 20;
 
         // Borrow, check the underlying balance for this contract's address
         cToken.borrow(numUnderlyingToBorrow * 10**_underlyingDecimals);
@@ -72,83 +72,4 @@ contract MyContract {
         Ioptionhelper.mintAndAddLiquidity(option, optionAmount, tokenAmount);
     }
 
-
-
-    function myErc20RepayBorrow(
-        address _erc20Address,
-        address _cErc20Address,
-        uint256 amount
-    ) public returns (bool) {
-        Erc20 underlying = Erc20(_erc20Address);
-        CErc20 cToken = CErc20(_cErc20Address);
-
-        underlying.approve(_cErc20Address, amount);
-        uint256 error = cToken.repayBorrow(amount);
-
-        require(error == 0, "CErc20.repayBorrow Error");
-        return true;
-    }
-
-    function borrowEthExample(
-        address payable _cEtherAddress,
-        address _comptrollerAddress,
-        address _cTokenAddress,
-        address _underlyingAddress,
-        uint256 _underlyingToSupplyAsCollateral
-    ) public returns (uint) {
-        CEth cEth = CEth(_cEtherAddress);
-        Comptroller comptroller = Comptroller(_comptrollerAddress);
-        CErc20 cToken = CErc20(_cTokenAddress);
-        Erc20 underlying = Erc20(_underlyingAddress);
-
-        // Approve transfer of underlying
-        underlying.approve(_cTokenAddress, _underlyingToSupplyAsCollateral);
-
-        // Supply underlying as collateral, get cToken in return
-        uint256 error = cToken.mint(_underlyingToSupplyAsCollateral);
-        require(error == 0, "CErc20.mint Error");
-
-        // Enter the market so you can borrow another type of asset
-        address[] memory cTokens = new address[](1);
-        cTokens[0] = _cTokenAddress;
-        uint256[] memory errors = comptroller.enterMarkets(cTokens);
-        if (errors[0] != 0) {
-            revert("Comptroller.enterMarkets failed.");
-        }
-
-        // Get my account's total liquidity value in Compound
-        (uint256 error2, uint256 liquidity, uint256 shortfall) = comptroller
-            .getAccountLiquidity(address(this));
-        if (error2 != 0) {
-            revert("Comptroller.getAccountLiquidity failed.");
-        }
-        require(shortfall == 0, "account underwater");
-        require(liquidity > 0, "account has excess collateral");
-
-        // Borrowing near the max amount will result
-        // in your account being liquidated instantly
-        emit MyLog("Maximum ETH Borrow (borrow far less!)", liquidity);
-
-        uint256 numWeiToBorrow = 2000000000000000; // 0.002 ETH
-
-        // Borrow, then check the underlying balance for this contract's address
-        cEth.borrow(numWeiToBorrow);
-
-        uint256 borrows = cEth.borrowBalanceCurrent(address(this));
-        emit MyLog("Current ETH borrow amount", borrows);
-
-        return borrows;
-    }
-
-    function myEthRepayBorrow(address _cEtherAddress, uint256 amount, uint256 gas)
-        public
-        returns (bool)
-    {
-        CEth cEth = CEth(_cEtherAddress);
-        cEth.repayBorrow{ value: amount, gas: gas }();
-        return true;
-    }
-
-    // Need this to receive ETH when `borrowEthExample` executes
-    receive() external payable {}
 }
